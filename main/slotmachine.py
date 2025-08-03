@@ -9,11 +9,32 @@ symbols = {
     "C": 4,
 }
 
+symbols_value = {
+    "A": 4,
+    "B": 3,
+    "C": 2,
+}
+
 MIN_LINES = 1
 MAX_LINES = 3
 
 MIN_BET = 1
 MAX_BET = 10
+
+
+def check_winnings(columns, lines, bet, values):
+    winnings = 0
+    winning_lines = []
+    for line in range(lines):
+        symbol = columns[0][line]
+        for column in columns:
+            symbol_to_check = column[line]
+            if symbol != symbol_to_check:
+                break
+        else:
+            winnings += values[symbol] * bet
+            winning_lines.append(line+1)
+    return winnings, winning_lines
 
 
 def get_slot_machine_spin(rows, cols, symbols):
@@ -82,6 +103,10 @@ def get_number_of_lines():
 
 def get_total_bet(balance, lines):
     while True:
+        if balance//lines <= 0:
+            print("Not enough balance to continue. Terminating game.")
+            quit()
+
         amount = input("Please enter the bet on each line: ")
         if not amount.isdigit():
             print("Please enter a number.")
@@ -103,8 +128,7 @@ def get_total_bet(balance, lines):
     return total_bet
 
 
-def main():
-    balance = deposit()
+def spin(balance):
     lines = get_number_of_lines()
     total_bet = get_total_bet(balance, lines)
 
@@ -113,6 +137,25 @@ def main():
 
     slots = get_slot_machine_spin(ROWS, COLS, symbols)
     print_slot_machine(slots)
+
+    winnings, winning_lines = check_winnings(
+        slots, lines, total_bet//lines, symbols_value)
+    print(f"You won a total of {winnings} for {len(winning_lines)} lines.")
+    print("Lines won on: ", *winning_lines)
+    return winnings - total_bet
+
+
+def main():
+    balance = deposit()
+    while True:
+        print(f"Current balance is: {balance}")
+        play_command = input("Press enter to spin or 'q' to quit.").lower()
+        if play_command == "q":
+            break
+        balance += spin(balance)
+        if balance <= 0:
+            print("Not enough balance to continue. Terminating game.")
+            quit()
 
 
 main()
